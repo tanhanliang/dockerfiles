@@ -1,20 +1,20 @@
-## Pytorch (a work in progress)
-Included ML-related frameworks/software:
+## Pytorch with GPU support and other stuff
+Included ML-related frameworks/software:  
 cuda-9.0  
 cudnn7  
-pytorch  
-miniconda  
 intel-numpy  
 intel-scipy  
-intel-scikit-learn  
-matplotlib  
-jupyterlab  
+intel-scikit-learn
+jupyterlab
+miniconda
+matplotlib
+pytorch
+python3
+pandas
 
-Misc:
-fish  
+Misc:  
 curl  
+build-essential
+fish (alternative to the bash shell)  
 git  
 sudo  
-build-essential
-
-

@@ -1,58 +1,79 @@
-FROM nvidia/cuda:9.0-cudnn7-runtime-ubuntu16.04
+FROM nvidia/cuda:9.0-cudnn7-devel-ubuntu16.04
 
-MAINTAINER Han Liang Tan 
+MAINTAINER Han Liang Tan
 
-RUN chmod 777 /home
-
-ENV HOME=/home
-
-RUN apt-get update && apt-get install --yes \
-    curl \
-    git \
-    sudo \
-    build-essential \
-    fish
-
-RUN chsh -s /usr/bin/fish
+# Redundant, but increases clarity
+USER root
 
 # don't run as root within the container
-RUN groupadd --gid 1000 thldockergroup && \
-    adduser --uid 999 thldocker
+RUN groupadd --gid 1000 thldockergroup \
+    && adduser --disabled-password --uid 999 thldocker
+#    && usermod -a -G thldockergroup thldocker
 
-USER thldocker 
+RUN apt-get update && apt-get install --yes \
+    build-essential \
+    curl \
+    fish \
+    git \
+    sudo \
+    vim
 
-RUN curl --show-error --output ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
-    && chmod +x ~/miniconda.sh \
-    && ~/miniconda.sh -p /home/miniconda -b \
-    && rm ~/miniconda.sh
+RUN chown thldocker:thldockergroup /home/thldocker/ \
+    && chmod 754 /home/thldocker/ \
+    && chsh --shell /usr/bin/fish
 
-ENV PATH=/home/miniconda/bin:$PATH
- 
-RUN conda install conda-build \
-    && conda create --yes --name pytorch python=3.6
+USER thldocker
 
-ENV CONDA_DEFAULT_ENV=pytorch
-ENV CONDA_PREFIX=/home/miniconda/envs/$CONDA_DEFAULT_ENV
-ENV PATH=$CONDA_PREFIX/bin:$PATH
+RUN mkdir /home/thldocker/code
+WORKDIR /home/thldocker/code
 
-RUN conda activate pytorch
+RUN curl --show-error --output /home/thldocker/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && chmod +x /home/thldocker/miniconda.sh \
+    && /home/thldocker/miniconda.sh -p /home/thldocker/miniconda -b \
+    && rm /home/thldocker/miniconda.sh
 
-RUN conda config --set auto_update_conda False
+# Allow fish shell to run "conda activate", if additional environments are required
+# https://stackoverflow.com/questions/42871313/cannot-run-source-activate-with-conda-in-fish-shell
+ENV fish_config="/home/thldocker/.config/fish/config.fish"
+
+RUN mkdir --parents /home/thldocker/.config/fish/ \
+    && touch $fish_config \
+    && echo "source /home/thldocker/miniconda/etc/fish/conf.d/conda.fish" > $fish_config
+
+ENV base_conda=/home/thldocker/miniconda/bin/conda
+
+RUN $base_conda install conda-build \
+    && $base_conda config --set auto_update_conda False
+
+ENV PATH /home/thldocker/miniconda/bin:$PATH
+
+RUN conda install --yes \
+    python=3
 
 RUN conda install --channel pytorch --yes \
+    cuda90 \
     pytorch \
-    torchvision \
-    cuda90
+    torchvision
 
-# accelerated with Intel Math Kernel Library
-RUN conda install --channel intel --yes \
+# This will unfortunately change python3 to Intel's python distribution
+RUN conda install --channel intel --no-update-deps --yes \
     numpy \
-    scipy \
-    scikit-learn
+    scikit-learn \
+    scipy 
 
 RUN conda install --channel conda-forge --yes \
     matplotlib \
     jupyterlab
+
+RUN conda install --channel anaconda --yes \
+    pandas
+
+USER root
+
+RUN chown thldocker:thldockergroup /home/thldocker/code \
+    && usermod -a -G thldockergroup thldocker 
+
+USER thldocker
 
 EXPOSE 8888
 
