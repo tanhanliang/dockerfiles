@@ -15,6 +15,6 @@ pandas
 Misc:  
 curl  
 build-essential  
-fish (alternative to the bash shell)  
+fish (alternative to bash)  
 git  
 sudo  
