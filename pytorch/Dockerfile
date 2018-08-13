@@ -8,7 +8,7 @@ USER root
 # don't run as root within the container
 RUN groupadd --gid 1000 thldockergroup \
     && adduser --disabled-password --uid 999 thldocker
-#    && usermod -a -G thldockergroup thldocker
+    && usermod -a -G thldockergroup thldocker
 
 RUN apt-get update && apt-get install --yes \
     build-essential \
@@ -67,13 +67,6 @@ RUN conda install --channel conda-forge --yes \
 
 RUN conda install --channel anaconda --yes \
     pandas
-
-USER root
-
-RUN chown thldocker:thldockergroup /home/thldocker/code \
-    && usermod -a -G thldockergroup thldocker 
-
-USER thldocker
 
 EXPOSE 8888
 
