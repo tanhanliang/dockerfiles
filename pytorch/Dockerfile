@@ -7,7 +7,7 @@ USER root
 
 # don't run as root within the container
 RUN groupadd --gid 1000 thldockergroup \
-    && adduser --disabled-password --uid 999 thldocker
+    && adduser --disabled-password --uid 1000 thldocker
     && usermod -a -G thldockergroup thldocker
 
 RUN apt-get update && apt-get install --yes \
